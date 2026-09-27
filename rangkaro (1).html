@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RangKaro — Color &amp; Draw for Kids</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF3D6;
+    --panel:#FFFFFF;
+    --ink:#22314F;
+    --pink:#FF5D8F;
+    --teal:#2FB8C6;
+    --amber:#FFB627;
+    --green:#4CAF7D;
+    --violet:#7C6CF0;
+    --radius:20px;
+    --shadow-off: 6px;
+    box-sizing:border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1B1730; --panel:#241F3D; --ink:#F5EFFF;
+    }
+  }
+  :root[data-theme="dark"]{ --bg:#1B1730; --panel:#241F3D; --ink:#F5EFFF; }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html,body{
+    margin:0; min-height:100%;
+    background:var(--bg); color:var(--ink);
+    font-family:'Nunito',sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1,h2,h3,.display{ font-family:'Baloo 2',sans-serif; margin:0; }
+
+  .sticker{
+    background:var(--panel);
+    border:3px solid var(--ink);
+    border-radius:var(--radius);
+    box-shadow: var(--shadow-off) var(--shadow-off) 0 var(--ink);
+  }
+  button{ font-family:'Nunito',sans-serif; cursor:pointer; }
+
+  .wrap{ max-width:1080px; margin:0 auto; padding:18px 16px 40px; }
+
+  header{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand .badge{
+    width:52px; height:52px; border-radius:16px;
+    background:var(--pink); border:3px solid var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; transform:rotate(-6deg);
+    box-shadow:4px 4px 0 var(--ink);
+  }
+  .brand h1{ font-size:28px; letter-spacing:.2px; }
+  .brand p{ margin:2px 0 0; font-size:14px; opacity:.75; }
+
+  .cats{
+    display:flex; gap:10px; overflow-x:auto; padding:4px 2px 10px;
+    -ms-overflow-style:none; scrollbar-width:none;
+  }
+  .cats::-webkit-scrollbar{ display:none; }
+  .cat-btn{
+    flex:0 0 auto;
+    display:flex; align-items:center; gap:8px;
+    padding:10px 16px; border-radius:999px;
+    border:3px solid var(--ink); background:var(--panel);
+    font-weight:800; font-size:15px; color:var(--ink);
+    box-shadow:4px 4px 0 var(--ink);
+    transition:transform .08s ease;
+  }
+  .cat-btn.active{ background:var(--amber); transform:translate(3px,3px); box-shadow:1px 1px 0 var(--ink); }
+  .cat-btn:active{ transform:translate(3px,3px); box-shadow:1px 1px 0 var(--ink); }
+
+  .thumbs{
+    display:flex; gap:12px; overflow-x:auto; padding:6px 2px 16px;
+    -ms-overflow-style:none; scrollbar-width:none;
+  }
+  .thumbs::-webkit-scrollbar{ display:none; }
+  .thumb{
+    flex:0 0 auto; width:92px; height:92px; padding:4px;
+    border-radius:14px; border:3px solid var(--ink); background:#fff;
+    box-shadow:3px 3px 0 var(--ink);
+  }
+  .thumb.active{ background:var(--teal); }
+  .thumb canvas{ width:100%; height:100%; display:block; border-radius:8px; }
+
+  main{
+    display:grid; grid-template-columns: 1fr; gap:18px;
+  }
+  @media(min-width:860px){
+    main{ grid-template-columns: 1fr 300px; align-items:start; }
+  }
+
+  .stage{
+    padding:18px; display:flex; flex-direction:column; align-items:center; gap:14px;
+  }
+  .canvas-frame{
+    width:100%; max-width:500px; aspect-ratio:1/1;
+    background:#fff; border-radius:14px; border:3px dashed var(--ink);
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    touch-action:none;
+  }
+  .canvas-frame canvas{ width:100%; height:100%; display:block; cursor:crosshair; }
+
+  .mode-row{ display:flex; gap:10px; }
+  .mode-btn{
+    padding:10px 18px; border-radius:14px; border:3px solid var(--ink);
+    font-weight:800; background:#fff; box-shadow:3px 3px 0 var(--ink);
+  }
+  .mode-btn.active{ background:var(--violet); color:#fff; }
+
+  .brush-size{ display:flex; align-items:center; gap:10px; width:100%; max-width:340px; }
+  .brush-size input[type=range]{ flex:1; }
+
+  aside{ padding:18px; display:flex; flex-direction:column; gap:16px; }
+  aside h3{ font-size:17px; }
+
+  .palette{ display:flex; flex-wrap:wrap; gap:10px; }
+  .swatch{
+    width:38px; height:38px; border-radius:50%;
+    border:3px solid var(--ink); box-shadow:2px 2px 0 var(--ink);
+    padding:0; position:relative;
+  }
+  .swatch.selected::after{
+    content:''; position:absolute; inset:-7px; border-radius:50%;
+    border:3px solid var(--ink);
+  }
+  .swatch.custom{
+    display:flex; align-items:center; justify-content:center; background:#fff; font-size:16px;
+    overflow:hidden;
+  }
+  .swatch.custom input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+
+  .actions{ display:flex; flex-direction:column; gap:10px; }
+  .action-btn{
+    display:flex; align-items:center; gap:8px; justify-content:center;
+    padding:11px 14px; border-radius:14px; border:3px solid var(--ink);
+    font-weight:800; background:#fff; box-shadow:3px 3px 0 var(--ink);
+  }
+  .action-btn.primary{ background:var(--green); color:#fff; }
+  .action-btn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+
+  footer{ text-align:center; font-size:13px; opacity:.6; margin-top:26px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="badge">🎨</div>
+      <div>
+        <h1>RangKaro</h1>
+        <p>Pick a picture, pick a color, make it yours.</p>
+      </div>
+    </div>
+  </header>
+
+  <nav class="cats" id="cats"></nav>
+  <div class="thumbs" id="thumbs"></div>
+
+  <main>
+    <section class="stage sticker">
+      <div class="canvas-frame">
+        <canvas id="main-canvas" width="500" height="500"></canvas>
+      </div>
+
+      <div class="mode-row">
+        <button class="mode-btn active" id="mode-fill">🪣 Fill</button>
+        <button class="mode-btn" id="mode-brush">🖌️ Brush</button>
+      </div>
+
+      <div class="brush-size" id="brush-size-row" style="display:none;">
+        <span>Size</span>
+        <input type="range" id="brush-size" min="4" max="40" value="14">
+      </div>
+    </section>
+
+    <aside class="sticker">
+      <div>
+        <h3>Colors</h3>
+        <div class="palette" id="palette"></div>
+      </div>
+
+      <div class="actions">
+        <button class="action-btn" id="btn-undo">↩️ Undo</button>
+        <button class="action-btn" id="btn-clear">🧽 Clear page</button>
+        <button class="action-btn primary" id="btn-download">⬇️ Save my drawing</button>
+      </div>
+    </aside>
+  </main>
+
+  <footer>Made with RangKaro • your drawings stay on your own device</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- helpers to build shapes ---------- */
+  function starPath(p, cx, cy, spikes, outerR, innerR, rotOffset){
+    rotOffset = rotOffset === undefined ? -Math.PI/2 : rotOffset;
+    let rot = rotOffset;
+    const step = Math.PI/spikes;
+    p.moveTo(cx+Math.cos(rot)*outerR, cy+Math.sin(rot)*outerR);
+    for(let i=0;i<spikes;i++){
+      rot += step;
+      p.lineTo(cx+Math.cos(rot)*innerR, cy+Math.sin(rot)*innerR);
+      rot += step;
+      p.lineTo(cx+Math.cos(rot)*outerR, cy+Math.sin(rot)*outerR);
+    }
+    p.closePath();
+  }
+  function heartPath(p, cx, cy, size){
+    p.moveTo(cx, cy+size*0.3);
+    p.bezierCurveTo(cx, cy, cx-size, cy, cx-size, cy+size*0.35);
+    p.bezierCurveTo(cx-size, cy+size*0.7, cx, cy+size*0.9, cx, cy+size*1.15);
+    p.bezierCurveTo(cx, cy+size*0.9, cx+size, cy+size*0.7, cx+size, cy+size*0.35);
+    p.bezierCurveTo(cx+size, cy, cx, cy, cx, cy+size*0.3);
+    p.closePath();
+  }
+  function blobCluster(p, circles){
+    circles.forEach(function(c){
+      p.moveTo(c[0]+c[2], c[1]);
+      p.arc(c[0], c[1], c[2], 0, Math.PI*2);
+    });
+  }
+
+  /* ---------- picture definitions (500x500 logical space) ---------- */
+  const PICTURES = {
+
+    cat:{
+      name:'Cat',
+      regions:[
+        {id:'tail', build:p=>p.ellipse(410,300,78,20,Math.PI/4,0,Math.PI*2)},
+        {id:'body', build:p=>p.ellipse(250,330,110,95,0,0,Math.PI*2)},
+        {id:'ears', build:p=>{
+          p.moveTo(165,140);p.lineTo(185,45);p.lineTo(228,145);p.closePath();
+          p.moveTo(335,140);p.lineTo(315,45);p.lineTo(272,145);p.closePath();
+        }},
+        {id:'head', build:p=>p.arc(250,185,95,0,Math.PI*2)}
+      ],
+      front:[
+        {type:'stroke', width:2, build:p=>{
+          p.moveTo(183,128);p.lineTo(193,80);p.lineTo(210,130);
+          p.moveTo(317,128);p.lineTo(307,80);p.lineTo(290,130);
+        }},
+        {type:'fill', build:p=>{ p.arc(213,180,9,0,Math.PI*2); p.arc(287,180,9,0,Math.PI*2); }},
+        {type:'fill', build:p=>{ p.moveTo(250,200);p.lineTo(238,218);p.lineTo(262,218);p.closePath(); }},
+        {type:'stroke', width:3, build:p=>{
+          p.moveTo(250,218);p.lineTo(250,228);
+          p.moveTo(250,228);p.quadraticCurveTo(232,245,215,232);
+          p.moveTo(250,228);p.quadraticCurveTo(268,245,285,232);
+        }},
+        {type:'stroke', width:2, build:p=>{
+          p.moveTo(155,195);p.lineTo(75,185);
+          p.moveTo(155,205);p.lineTo(75,208);
+          p.moveTo(155,215);p.lineTo(75,232);
+          p.moveTo(345,195);p.lineTo(425,185);
+          p.moveTo(345,205);p.lineTo(425,208);
+          p.moveTo(345,215);p.lineTo(425,232);
+        }}
+      ]
+    },
+
+    fish:{
+      name:'Fish',
+      regions:[
+        {id:'tailfin', build:p=>{ p.moveTo(110,250);p.lineTo(25,180);p.lineTo(25,320);p.closePath(); }},
+        {id:'bottomfin', build:p=>{ p.moveTo(230,330);p.lineTo(265,410);p.lineTo(300,330);p.closePath(); }},
+        {id:'topfin', build:p=>{ p.moveTo(230,170);p.lineTo(265,90);p.lineTo(300,170);p.closePath(); }},
+        {id:'body', build:p=>p.ellipse(280,250,150,95,0,0,Math.PI*2)}
+      ],
+      front:[
+        {type:'fill', color:'#FFFFFF', build:p=>p.arc(360,225,20,0,Math.PI*2)},
+        {type:'fill', build:p=>p.arc(365,222,9,0,Math.PI*2)},
+        {type:'stroke', width:3, build:p=>{ p.moveTo(400,255);p.quadraticCurveTo(415,262,400,270); }},
+        {type:'stroke', width:3, build:p=>{ p.moveTo(340,210);p.quadraticCurveTo(325,250,340,290); }}
+      ]
+    },
+
+    car:{
+      name:'Car',
+      regions:[
+        {id:'wheels', build:p=>{ p.moveTo(195,380);p.arc(150,380,45,0,Math.PI*2); p.moveTo(395,380);p.arc(350,380,45,0,Math.PI*2); }},
+        {id:'body', build:p=>{
+          const x=50,y=290,w=400,h=100,r=30;
+          p.moveTo(x+r,y);
+          p.lineTo(x+w-r,y);
+          p.quadraticCurveTo(x+w,y,x+w,y+r);
+          p.lineTo(x+w,y+h-r);
+          p.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+          p.lineTo(x+r,y+h);
+          p.quadraticCurveTo(x,y+h,x,y+h-r);
+          p.lineTo(x,y+r);
+          p.quadraticCurveTo(x,y,x+r,y);
+          p.closePath();
+        }},
+        {id:'roof', build:p=>{ p.moveTo(150,292);p.lineTo(190,180);p.lineTo(310,180);p.lineTo(350,292);p.closePath(); }},
+        {id:'window', build:p=>{ p.moveTo(205,275);p.lineTo(230,205);p.lineTo(270,205);p.lineTo(295,275);p.closePath(); }}
+      ],
+      front:[
+        {type:'fill', color:'#FFB627', build:p=>p.arc(430,330,12,0,Math.PI*2)},
+        {type:'fill', build:p=>{ p.moveTo(164,380);p.arc(150,380,14,0,Math.PI*2); p.moveTo(364,380);p.arc(350,380,14,0,Math.PI*2); }}
+      ]
+    },
+
+    rocket:{
+      name:'Rocket',
+      regions:[
+        {id:'leftfin', build:p=>{ p.moveTo(210,360);p.lineTo(130,440);p.lineTo(215,400);p.closePath(); }},
+        {id:'rightfin', build:p=>{ p.moveTo(290,360);p.lineTo(370,440);p.lineTo(285,400);p.closePath(); }},
+        {id:'body', build:p=>p.ellipse(250,270,75,155,0,0,Math.PI*2)},
+        {id:'nose', build:p=>{ p.moveTo(180,145);p.lineTo(250,35);p.lineTo(320,145);p.closePath(); }},
+        {id:'window', build:p=>p.arc(250,240,35,0,Math.PI*2)}
+      ],
+      front:[
+        {type:'fill', color:'#FFB627', build:p=>{
+          p.moveTo(225,420);
+          p.quadraticCurveTo(250,470,275,420);
+          p.quadraticCurveTo(250,440,225,420);
+          p.closePath();
+        }}
+      ]
+    },
+
+    star:{
+      name:'Star',
+      regions:[
+        {id:'star', build:p=>starPath(p,250,240,5,150,62)},
+        {id:'sparkle', build:p=>starPath(p,390,110,4,42,16)}
+      ]
+    },
+
+    heart:{
+      name:'Heart',
+      regions:[
+        {id:'heart', build:p=>heartPath(p,250,190,150)},
+        {id:'accent', build:p=>starPath(p,390,110,5,40,16)}
+      ]
+    },
+
+    flower:{
+      name:'Flower',
+      back:[
+        {color:'#4CAF7D', width:8, build:p=>{ p.moveTo(250,300);p.quadraticCurveTo(230,380,250,460); }}
+      ],
+      regions:(function(){
+        const list=[
+          {id:'leaf1', build:p=>p.ellipse(210,380,35,15,-0.4,0,Math.PI*2)},
+          {id:'leaf2', build:p=>p.ellipse(290,410,35,15,0.4,0,Math.PI*2)}
+        ];
+        for(let i=0;i<6;i++){
+          const angleDeg = -90 + i*60;
+          list.push({id:'petal'+i, build:function(p){
+            const a = angleDeg*Math.PI/180;
+            const px = 250+Math.cos(a)*65, py = 230+Math.sin(a)*65;
+            const rot = (angleDeg+90)*Math.PI/180;
+            p.ellipse(px,py,42,95,rot,0,Math.PI*2);
+          }});
+        }
+        list.push({id:'center', build:p=>p.arc(250,230,48,0,Math.PI*2)});
+        return list;
+      })()
+    },
+
+    tree:{
+      name:'Tree',
+      regions:[
+        {id:'trunk', build:p=>p.rect(215,320,70,150)},
+        {id:'foliage', build:p=>blobCluster(p,[[250,190,90],[180,225,68],[320,225,68],[250,255,85]])},
+        {id:'fruits', build:p=>blobCluster(p,[[210,210,14],[290,215,14],[250,175,14]])}
+      ]
+    },
+
+    butterfly:{
+      name:'Butterfly',
+      regions:[
+        {id:'wingTL', build:p=>p.ellipse(170,190,70,55,-0.35,0,Math.PI*2)},
+        {id:'wingBL', build:p=>p.ellipse(185,300,55,45,0.26,0,Math.PI*2)},
+        {id:'wingTR', build:p=>p.ellipse(330,190,70,55,0.35,0,Math.PI*2)},
+        {id:'wingBR', build:p=>p.ellipse(315,300,55,45,-0.26,0,Math.PI*2)},
+        {id:'body', build:p=>p.ellipse(250,245,18,110,0,0,Math.PI*2)}
+      ],
+      front:[
+        {type:'stroke', width:3, build:p=>{
+          p.moveTo(244,140);p.quadraticCurveTo(210,100,195,80);
+          p.moveTo(256,140);p.quadraticCurveTo(290,100,305,80);
+        }},
+        {type:'fill', build:p=>{ p.arc(244,150,7,0,Math.PI*2); p.arc(256,150,7,0,Math.PI*2); }}
+      ]
+    },
+
+    airplane:{
+      name:'Airplane',
+      regions:[
+        {id:'tailwing', build:p=>{ p.moveTo(120,260);p.lineTo(70,300);p.lineTo(150,270);p.closePath(); }},
+        {id:'tailfin', build:p=>{ p.moveTo(130,260);p.lineTo(90,190);p.lineTo(160,250);p.closePath(); }},
+        {id:'wing', build:p=>{ p.moveTo(200,260);p.lineTo(140,340);p.lineTo(260,270);p.closePath(); }},
+        {id:'fuselage', build:p=>p.ellipse(260,260,150,32,0,0,Math.PI*2)},
+        {id:'nose', build:p=>p.ellipse(400,260,20,22,0,0,Math.PI*2)},
+        {id:'window', build:p=>p.arc(300,255,12,0,Math.PI*2)}
+      ],
+      front:[
+        {type:'stroke', width:3, build:p=>{
+          p.moveTo(420,248);p.lineTo(420,272);
+          p.moveTo(410,240);p.lineTo(430,280);
+          p.moveTo(430,240);p.lineTo(410,280);
+        }}
+      ]
+    },
+
+    moon:{
+      name:'Moon & Stars',
+      regions:[
+        {id:'moon', build:p=>p.arc(190,180,60,0,Math.PI*2)},
+        {id:'star1', build:p=>starPath(p,350,110,4,30,11)},
+        {id:'star2', build:p=>starPath(p,390,230,4,22,8)},
+        {id:'star3', build:p=>starPath(p,300,300,4,18,7)}
+      ]
+    },
+
+    sun:{
+      name:'Sun',
+      regions:[
+        {id:'rays', build:p=>{
+          for(let i=0;i<8;i++){
+            const a = i*Math.PI/4;
+            const a1 = a-0.18, a2 = a+0.18;
+            p.moveTo(250+Math.cos(a1)*95, 250+Math.sin(a1)*95);
+            p.lineTo(250+Math.cos(a)*155, 250+Math.sin(a)*155);
+            p.lineTo(250+Math.cos(a2)*95, 250+Math.sin(a2)*95);
+            p.closePath();
+          }
+        }},
+        {id:'core', build:p=>p.arc(250,250,90,0,Math.PI*2)}
+      ],
+      front:[
+        {type:'fill', build:p=>{ p.arc(220,240,8,0,Math.PI*2); p.arc(280,240,8,0,Math.PI*2); }},
+        {type:'stroke', width:3, build:p=>{ p.moveTo(215,275);p.quadraticCurveTo(250,300,285,275); }}
+      ]
+    },
+
+    apple:{
+      name:'Apple',
+      regions:[
+        {id:'body', build:p=>p.ellipse(250,275,105,95,0,0,Math.PI*2)},
+        {id:'stem', build:p=>{ p.moveTo(242,155);p.lineTo(252,155);p.lineTo(255,190);p.lineTo(245,190);p.closePath(); }},
+        {id:'leaf', build:p=>p.ellipse(292,168,30,16,-0.6,0,Math.PI*2)}
+      ]
+    },
+
+    icecream:{
+      name:'Ice Cream',
+      regions:[
+        {id:'cone', build:p=>{ p.moveTo(250,460);p.lineTo(195,300);p.lineTo(305,300);p.closePath(); }},
+        {id:'scoop1', build:p=>p.arc(250,270,75,0,Math.PI*2)},
+        {id:'scoop2', build:p=>p.arc(250,170,65,0,Math.PI*2)},
+        {id:'cherry', build:p=>p.arc(250,95,16,0,Math.PI*2)}
+      ]
+    },
+
+    balloon:{
+      name:'Balloon',
+      regions:[
+        {id:'balloon', build:p=>p.ellipse(250,200,90,110,0,0,Math.PI*2)},
+        {id:'knot', build:p=>{ p.moveTo(238,305);p.lineTo(262,305);p.lineTo(250,325);p.closePath(); }}
+      ],
+      front:[
+        {type:'stroke', width:3, build:p=>{ p.moveTo(250,325);p.quadraticCurveTo(220,380,250,420);p.quadraticCurveTo(280,450,255,460); }},
+        {type:'fill', color:'#FFFFFF', build:p=>p.ellipse(215,165,20,30,-0.4,0,Math.PI*2)}
+      ]
+    },
+
+    kite:{
+      name:'Kite',
+      regions:[
+        {id:'q1', build:p=>{ p.moveTo(250,220);p.lineTo(250,70);p.lineTo(120,220);p.closePath(); }},
+        {id:'q2', build:p=>{ p.moveTo(250,220);p.lineTo(250,70);p.lineTo(380,220);p.closePath(); }},
+        {id:'q3', build:p=>{ p.moveTo(250,220);p.lineTo(250,420);p.lineTo(380,220);p.closePath(); }},
+        {id:'q4', build:p=>{ p.moveTo(250,220);p.lineTo(250,420);p.lineTo(120,220);p.closePath(); }}
+      ],
+      front:[
+        {type:'stroke', width:3, build:p=>{ p.moveTo(250,420);p.quadraticCurveTo(230,450,250,470);p.quadraticCurveTo(270,490,250,510); }},
+        {type:'fill', color:'#FF5D8F', build:p=>{ p.moveTo(250,447);p.lineTo(238,458);p.lineTo(250,469);p.lineTo(262,458);p.closePath(); }},
+        {type:'fill', color:'#2FB8C6', build:p=>{ p.moveTo(250,487);p.lineTo(238,498);p.lineTo(250,509);p.lineTo(262,498);p.closePath(); }}
+      ]
+    },
+
+    robot:{
+      name:'Robot',
+      regions:[
+        {id:'armL', build:p=>p.rect(105,240,55,110)},
+        {id:'armR', build:p=>p.rect(340,240,55,110)},
+        {id:'legL', build:p=>p.rect(190,375,55,95)},
+        {id:'legR', build:p=>p.rect(255,375,55,95)},
+        {id:'body', build:p=>p.rect(165,220,170,150)},
+        {id:'head', build:p=>p.rect(180,110,140,100)},
+        {id:'antenna', build:p=>p.arc(250,85,14,0,Math.PI*2)}
+      ],
+      front:[
+        {type:'stroke', width:4, build:p=>{ p.moveTo(250,110);p.lineTo(250,99); }},
+        {type:'fill', build:p=>{ p.rect(215,150,24,24); p.rect(261,150,24,24); }},
+        {type:'fill', build:p=>{ p.rect(222,188,56,14); }}
+      ]
+    },
+
+    monster:{
+      name:'Monster',
+      regions:[
+        {id:'footL', build:p=>p.ellipse(200,430,35,18,0,0,Math.PI*2)},
+        {id:'footR', build:p=>p.ellipse(300,430,35,18,0,0,Math.PI*2)},
+        {id:'body', build:p=>p.ellipse(250,280,130,150,0,0,Math.PI*2)},
+        {id:'hornL', build:p=>{ p.moveTo(200,150);p.lineTo(180,90);p.lineTo(225,155);p.closePath(); }},
+        {id:'hornR', build:p=>{ p.moveTo(300,150);p.lineTo(320,90);p.lineTo(275,155);p.closePath(); }},
+        {id:'spot1', build:p=>p.arc(190,260,18,0,Math.PI*2)},
+        {id:'spot2', build:p=>p.arc(305,320,20,0,Math.PI*2)}
+      ],
+      front:[
+        {type:'fill', color:'#FFFFFF', build:p=>{ p.arc(215,250,22,0,Math.PI*2); p.arc(285,250,22,0,Math.PI*2); }},
+        {type:'fill', build:p=>{ p.arc(215,253,9,0,Math.PI*2); p.arc(285,253,9,0,Math.PI*2); }},
+        {type:'stroke', width:3, build:p=>{ p.moveTo(210,320);p.quadraticCurveTo(250,350,290,320); }}
+      ]
+    },
+
+    lantern:{
+      name:'Lantern',
+      regions:[
+        {id:'cap', build:p=>p.rect(220,80,60,25)},
+        {id:'body', build:p=>p.ellipse(250,230,90,120,0,0,Math.PI*2)},
+        {id:'bottomcap', build:p=>p.rect(220,345,60,25)}
+      ],
+      back:[
+        {color:'#22314F', width:2, build:p=>{ p.moveTo(250,60);p.quadraticCurveTo(230,70,250,80); p.moveTo(250,60);p.quadraticCurveTo(270,70,250,80); }}
+      ],
+      front:[
+        {type:'stroke', width:2, build:p=>{
+          p.moveTo(215,95);p.quadraticCurveTo(200,230,215,345);
+          p.moveTo(250,95);p.quadraticCurveTo(240,230,250,345);
+          p.moveTo(285,95);p.quadraticCurveTo(300,230,285,345);
+        }},
+        {type:'stroke', width:3, build:p=>{ p.moveTo(250,370);p.lineTo(250,410); }},
+        {type:'fill', build:p=>{ p.moveTo(250,410);p.lineTo(238,430);p.lineTo(262,430);p.closePath(); }}
+      ]
+    },
+
+    cake:{
+      name:'Celebration Cake',
+      regions:[
+        {id:'cakeBase', build:p=>p.rect(160,320,180,110)},
+        {id:'cakeTop', build:p=>p.rect(190,260,120,70)},
+        {id:'frosting', build:p=>p.rect(190,245,120,25)},
+        {id:'candle', build:p=>p.rect(240,190,20,55)}
+      ],
+      front:[
+        {type:'fill', color:'#FFB627', build:p=>{
+          p.moveTo(250,155);
+          p.quadraticCurveTo(235,175,250,190);
+          p.quadraticCurveTo(265,175,250,155);
+          p.closePath();
+        }}
+      ]
+    },
+
+    letterO:{
+      name:'Letter O',
+      regions:[
+        {id:'ring', fillRule:'evenodd', build:p=>{
+          p.arc(250,250,140,0,Math.PI*2);
+          p.moveTo(330,250);
+          p.arc(250,250,80,0,Math.PI*2,true);
+        }}
+      ]
+    },
+
+    letterC:{
+      name:'Letter C',
+      regions:[
+        {id:'ring', build:p=>{
+          const cx=250,cy=250,outerR=140,innerR=80;
+          const start=40*Math.PI/180, end=320*Math.PI/180;
+          p.arc(cx,cy,outerR,start,end,false);
+          p.arc(cx,cy,innerR,end,start,true);
+          p.closePath();
+        }}
+      ]
+    },
+
+    number1:{
+      name:'Number 1',
+      regions:[
+        {id:'flag', build:p=>{ p.moveTo(190,165);p.lineTo(230,120);p.lineTo(230,175);p.closePath(); }},
+        {id:'stem', build:p=>p.rect(230,120,40,320)},
+        {id:'base', build:p=>p.rect(180,440,140,30)}
+      ]
+    },
+
+    number2:{
+      name:'Number 2',
+      regions:[
+        {id:'top', build:p=>{
+          const cx=250,cy=165,outerR=95,innerR=50;
+          const start=-30*Math.PI/180, end=195*Math.PI/180;
+          p.arc(cx,cy,outerR,start,end,false);
+          p.arc(cx,cy,innerR,end,start,true);
+          p.closePath();
+        }},
+        {id:'diagonal', build:p=>{ p.moveTo(175,290);p.lineTo(215,255);p.lineTo(345,420);p.lineTo(305,445);p.closePath(); }},
+        {id:'base', build:p=>p.rect(150,425,220,35)}
+      ]
+    }
+
+  };
+
+  const CATEGORIES = [
+    {id:'animals', label:'Animals', emoji:'🐾', pics:['cat','fish','butterfly']},
+    {id:'vehicles', label:'Vehicles', emoji:'🚗', pics:['car','rocket','airplane']},
+    {id:'shapes', label:'Shapes', emoji:'⭐', pics:['star','heart','moon']},
+    {id:'nature', label:'Nature', emoji:'🌿', pics:['flower','tree','sun']},
+    {id:'food', label:'Food', emoji:'🍎', pics:['apple','icecream']},
+    {id:'fun', label:'Fun', emoji:'🎈', pics:['balloon','kite']},
+    {id:'cartoons', label:'Cartoons', emoji:'🤖', pics:['robot','monster']},
+    {id:'festivals', label:'Festivals', emoji:'🎉', pics:['lantern','cake']},
+    {id:'alphabets', label:'Alphabets', emoji:'🔤', pics:['letterO','letterC']},
+    {id:'numbers', label:'Numbers', emoji:'🔢', pics:['number1','number2']}
+  ];
+
+  const SWATCHES = ['#FF5D8F','#FF8A5B','#FFC93C','#B5E655','#4CAF7D','#2FB8C6',
+    '#4FA8FF','#7C6CF0','#C77DFF','#FF6EC7','#8D6E63','#5C5C5C','#FFFFFF'];
+
+  const PAPER = '#FFFFFF';
+  const LINE = '#22314F';
+
+  /* ---------- state ---------- */
+  let activeCategory = CATEGORIES[0].id;
+  let activePictureId = CATEGORIES[0].pics[0];
+  let currentColor = SWATCHES[0];
+  let mode = 'fill'; // 'fill' | 'brush'
+  let brushSize = 14;
+
+  let pageState = {}; // pictureId -> {colors:{}, strokes:[], history:[]}
+  function ensureState(id){
+    if(!pageState[id]) pageState[id] = {colors:{}, strokes:[], history:[]};
+    return pageState[id];
+  }
+
+  /* ---------- rendering ---------- */
+  function renderPicture(ctx, picture, state, size){
+    size = size || 500;
+    ctx.save();
+    ctx.clearRect(0,0,size,size);
+    ctx.fillStyle = PAPER;
+    ctx.fillRect(0,0,size,size);
+
+    (picture.back||[]).forEach(function(shape){
+      const p = new Path2D();
+      shape.build(p);
+      ctx.strokeStyle = shape.color || LINE;
+      ctx.lineWidth = shape.width || 4;
+      ctx.lineCap = 'round'; ctx.lineJoin='round';
+      ctx.stroke(p);
+    });
+
+    picture.regions.forEach(function(region){
+      const p = new Path2D();
+      region.build(p);
+      ctx.fillStyle = (state.colors[region.id]) || PAPER;
+      ctx.fill(p, region.fillRule || 'nonzero');
+      ctx.strokeStyle = LINE;
+      ctx.lineWidth = 5;
+      ctx.lineJoin='round'; ctx.lineCap='round';
+      ctx.stroke(p);
+    });
+
+    (picture.front||[]).forEach(function(shape){
+      const p = new Path2D();
+      shape.build(p);
+      if(shape.type === 'stroke'){
+        ctx.strokeStyle = shape.color || LINE;
+        ctx.lineWidth = shape.width || 3;
+        ctx.lineCap='round'; ctx.lineJoin='round';
+        ctx.stroke(p);
+      } else {
+        ctx.fillStyle = shape.color || LINE;
+        ctx.fill(p);
+      }
+    });
+
+    (state.strokes||[]).forEach(function(stroke){
+      if(stroke.points.length < 1) return;
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.size;
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.beginPath();
+      stroke.points.forEach(function(pt,i){
+        if(i===0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+      });
+      ctx.stroke();
+    });
+
+    ctx.restore();
+  }
+
+  /* ---------- DOM setup ---------- */
+  const catsEl = document.getElementById('cats');
+  const thumbsEl = document.getElementById('thumbs');
+  const mainCanvas = document.getElementById('main-canvas');
+  const mainCtx = mainCanvas.getContext('2d');
+  const paletteEl = document.getElementById('palette');
+  const brushRow = document.getElementById('brush-size-row');
+  const brushRange = document.getElementById('brush-size');
+
+  function buildCategories(){
+    catsEl.innerHTML = '';
+    CATEGORIES.forEach(function(cat){
+      const btn = document.createElement('button');
+      btn.className = 'cat-btn' + (cat.id===activeCategory ? ' active' : '');
+      btn.textContent = cat.emoji + ' ' + cat.label;
+      btn.addEventListener('click', function(){
+        activeCategory = cat.id;
+        activePictureId = cat.pics[0];
+        buildCategories();
+        buildThumbs();
+        drawMain();
+      });
+      catsEl.appendChild(btn);
+    });
+  }
+
+  function buildThumbs(){
+    thumbsEl.innerHTML = '';
+    const cat = CATEGORIES.find(function(c){ return c.id===activeCategory; });
+    cat.pics.forEach(function(picId){
+      const wrap = document.createElement('button');
+      wrap.className = 'thumb' + (picId===activePictureId ? ' active' : '');
+      const c = document.createElement('canvas');
+      c.width = 200; c.height = 200;
+      wrap.appendChild(c);
+      const st = ensureState(picId);
+      renderPicture(c.getContext('2d'), PICTURES[picId], st, 200);
+      wrap.addEventListener('click', function(){
+        activePictureId = picId;
+        buildThumbs();
+        drawMain();
+      });
+      thumbsEl.appendChild(wrap);
+    });
+  }
+
+  function buildPalette(){
+    paletteEl.innerHTML = '';
+    SWATCHES.forEach(function(hex){
+      const b = document.createElement('button');
+      b.className = 'swatch' + (hex===currentColor ? ' selected' : '');
+      b.style.background = hex;
+      if(hex === '#FFFFFF') b.style.boxShadow = '2px 2px 0 ' + LINE + ', inset 0 0 0 1px #ddd';
+      b.addEventListener('click', function(){
+        currentColor = hex;
+        buildPalette();
+      });
+      paletteEl.appendChild(b);
+    });
+    const custom = document.createElement('label');
+    custom.className = 'swatch custom';
+    custom.textContent = '🎨';
+    custom.style.background = '#fff';
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = currentColor;
+    input.addEventListener('input', function(e){
+      currentColor = e.target.value;
+      buildPalette();
+    });
+    custom.appendChild(input);
+    paletteEl.appendChild(custom);
+  }
+
+  function drawMain(){
+    const st = ensureState(activePictureId);
+    renderPicture(mainCtx, PICTURES[activePictureId], st, 500);
+  }
+
+  function toLogical(evt){
+    const rect = mainCanvas.getBoundingClientRect();
+    const clientX = evt.clientX !== undefined ? evt.clientX : (evt.touches && evt.touches[0].clientX);
+    const clientY = evt.clientY !== undefined ? evt.clientY : (evt.touches && evt.touches[0].clientY);
+    return {
+      x: (clientX - rect.left) * (mainCanvas.width / rect.width),
+      y: (clientY - rect.top) * (mainCanvas.height / rect.height)
+    };
+  }
+
+  function handleFillClick(evt){
+    const st = ensureState(activePictureId);
+    const picture = PICTURES[activePictureId];
+    const pt = toLogical(evt);
+    for(let i=picture.regions.length-1; i>=0; i--){
+      const region = picture.regions[i];
+      const p = new Path2D();
+      region.build(p);
+      if(mainCtx.isPointInPath(p, pt.x, pt.y, region.fillRule || 'nonzero')){
+        const prev = st.colors[region.id] || PAPER;
+        if(prev === currentColor) return;
+        st.history.push({type:'fill', regionId: region.id, prevColor: prev});
+        st.colors[region.id] = currentColor;
+        drawMain();
+        buildThumbs();
+        return;
+      }
+    }
+  }
+
+  let drawingStroke = null;
+  function handleBrushStart(evt){
+    const st = ensureState(activePictureId);
+    const pt = toLogical(evt);
+    drawingStroke = {color: currentColor, size: brushSize, points:[pt]};
+    st.strokes.push(drawingStroke);
+    drawMain();
+  }
+  function handleBrushMove(evt){
+    if(!drawingStroke) return;
+    const pt = toLogical(evt);
+    drawingStroke.points.push(pt);
+    drawMain();
+  }
+  function handleBrushEnd(){
+    if(!drawingStroke) return;
+    const st = ensureState(activePictureId);
+    st.history.push({type:'stroke'});
+    drawingStroke = null;
+    buildThumbs();
+  }
+
+  mainCanvas.addEventListener('pointerdown', function(evt){
+    evt.preventDefault();
+    if(mode === 'fill'){ handleFillClick(evt); }
+    else { mainCanvas.setPointerCapture(evt.pointerId); handleBrushStart(evt); }
+  });
+  mainCanvas.addEventListener('pointermove', function(evt){
+    if(mode === 'brush' && drawingStroke){ evt.preventDefault(); handleBrushMove(evt); }
+  });
+  window.addEventListener('pointerup', function(){
+    if(mode === 'brush'){ handleBrushEnd(); }
+  });
+
+  document.getElementById('mode-fill').addEventListener('click', function(){
+    mode = 'fill';
+    document.getElementById('mode-fill').classList.add('active');
+    document.getElementById('mode-brush').classList.remove('active');
+    brushRow.style.display = 'none';
+  });
+  document.getElementById('mode-brush').addEventListener('click', function(){
+    mode = 'brush';
+    document.getElementById('mode-brush').classList.add('active');
+    document.getElementById('mode-fill').classList.remove('active');
+    brushRow.style.display = 'flex';
+  });
+  brushRange.addEventListener('input', function(e){ brushSize = Number(e.target.value); });
+
+  document.getElementById('btn-undo').addEventListener('click', function(){
+    const st = ensureState(activePictureId);
+    const last = st.history.pop();
+    if(!last) return;
+    if(last.type === 'fill'){
+      st.colors[last.regionId] = last.prevColor;
+    } else if(last.type === 'stroke'){
+      st.strokes.pop();
+    }
+    drawMain();
+    buildThumbs();
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', function(){
+    pageState[activePictureId] = {colors:{}, strokes:[], history:[]};
+    drawMain();
+    buildThumbs();
+  });
+
+  document.getElementById('btn-download').addEventListener('click', function(){
+    const link = document.createElement('a');
+    link.download = 'rangkaro-' + activePictureId + '.png';
+    link.href = mainCanvas.toDataURL('image/png');
+    link.click();
+  });
+
+  /* ---------- init ---------- */
+  buildCategories();
+  buildThumbs();
+  buildPalette();
+  drawMain();
+
+})();
+</script>
+</body>
+</html>
